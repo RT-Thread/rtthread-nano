@@ -21,8 +21,22 @@ if RT_USING_COMPONENTS_INIT
     endif
 endif
 
+source "$RTT_DIR/components/cplusplus/Kconfig"
+
 source "$RTT_DIR/components/finsh/Kconfig"
+
+source "$RTT_DIR/components/dfs/Kconfig"
+
 source "$RTT_DIR/components/drivers/Kconfig"
+
 source "$RTT_DIR/components/libc/Kconfig"
+
+source "$RTT_DIR/components/net/Kconfig"
+
+source "$RTT_DIR/components/vbus/Kconfig"
+
+source "$RTT_DIR/components/utilities/Kconfig"
+
+source "$RTT_DIR/components/CMSIS/Kconfig"
 
 endmenu

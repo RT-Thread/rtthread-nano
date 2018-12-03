@@ -2,10 +2,6 @@
  * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
- */
-
-/*
- * File      : rtthread.h
  *
  * Change Logs:
  * Date           Author       Notes
@@ -104,7 +100,8 @@ rt_tick_t rt_timer_next_timeout_tick(void);
 void rt_timer_check(void);
 
 #ifdef RT_USING_HOOK
-void rt_timer_timeout_sethook(void (*hook)(struct rt_timer *timer));
+void rt_timer_enter_sethook(void (*hook)(struct rt_timer *timer));
+void rt_timer_exit_sethook(void (*hook)(struct rt_timer *timer));
 #endif
 
 /**@}*/
