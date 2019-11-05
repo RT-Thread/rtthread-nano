@@ -90,7 +90,7 @@ void rt_hw_interrupt_umask(int vector);
 rt_isr_handler_t rt_hw_interrupt_install(int              vector,
                                          rt_isr_handler_t handler,
                                          void            *param,
-                                         char            *name);
+                                         const char      *name);
 
 rt_base_t rt_hw_interrupt_disable(void);
 void rt_hw_interrupt_enable(rt_base_t level);
@@ -116,6 +116,12 @@ void rt_hw_exception_install(rt_err_t (*exception_handle)(void *context));
  * delay interfaces
  */
 void rt_hw_us_delay(rt_uint32_t us);
+
+#define RT_DEFINE_SPINLOCK(x)  
+#define RT_DECLARE_SPINLOCK(x)    rt_ubase_t x
+
+#define rt_hw_spin_lock(lock)     *(lock) = rt_hw_interrupt_disable()
+#define rt_hw_spin_unlock(lock)   rt_hw_interrupt_enable(*(lock))
 
 #ifdef __cplusplus
 }
