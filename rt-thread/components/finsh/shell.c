@@ -894,3 +894,4 @@ int finsh_system_init(void)
 INIT_APP_EXPORT(finsh_system_init);
 
 #endif /* RT_USING_FINSH */
+
