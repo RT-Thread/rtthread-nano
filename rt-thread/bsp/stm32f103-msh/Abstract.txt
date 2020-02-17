@@ -1,0 +1,1 @@
+RT-Thread msh project for the NUCLEO-F103RB.

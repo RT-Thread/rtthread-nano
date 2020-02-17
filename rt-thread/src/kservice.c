@@ -133,20 +133,21 @@ void *rt_memset(void *s, int c, rt_ubase_t count)
 
     return s;
 #else
-#define LBLOCKSIZE      (sizeof(rt_int32_t))
-#define UNALIGNED(X)    ((rt_int32_t)X & (LBLOCKSIZE - 1))
+#define LBLOCKSIZE      (sizeof(long))
+#define UNALIGNED(X)    ((long)X & (LBLOCKSIZE - 1))
 #define TOO_SMALL(LEN)  ((LEN) < LBLOCKSIZE)
 
-    int i;
+    unsigned int i;
     char *m = (char *)s;
-    rt_uint32_t buffer;
-    rt_uint32_t *aligned_addr;
-    rt_uint32_t d = c & 0xff;
+    unsigned long buffer;
+    unsigned long *aligned_addr;
+    unsigned int d = c & 0xff;  /* To avoid sign extension, copy C to an
+                                unsigned variable.  */
 
     if (!TOO_SMALL(count) && !UNALIGNED(s))
     {
         /* If we get this far, we know that n is large and m is word-aligned. */
-        aligned_addr = (rt_uint32_t *)s;
+        aligned_addr = (unsigned long *)s;
 
         /* Store D into each char sized location in BUFFER so that
          * we can set large blocks quickly.
@@ -226,25 +227,24 @@ void *rt_memcpy(void *dst, const void *src, rt_ubase_t count)
     return dst;
 #else
 
-#define UNALIGNED(X, Y)                                               \
-                        (((rt_int32_t)X & (sizeof(rt_int32_t) - 1)) | \
-                         ((rt_int32_t)Y & (sizeof(rt_int32_t) - 1)))
-#define BIGBLOCKSIZE    (sizeof(rt_int32_t) << 2)
-#define LITTLEBLOCKSIZE (sizeof(rt_int32_t))
+#define UNALIGNED(X, Y) \
+    (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)))
+#define BIGBLOCKSIZE    (sizeof (long) << 2)
+#define LITTLEBLOCKSIZE (sizeof (long))
 #define TOO_SMALL(LEN)  ((LEN) < BIGBLOCKSIZE)
 
     char *dst_ptr = (char *)dst;
     char *src_ptr = (char *)src;
-    rt_int32_t *aligned_dst;
-    rt_int32_t *aligned_src;
+    long *aligned_dst;
+    long *aligned_src;
     int len = count;
 
     /* If the size is small, or either SRC or DST is unaligned,
     then punt into the byte copy loop.  This should be rare. */
     if (!TOO_SMALL(len) && !UNALIGNED(src_ptr, dst_ptr))
     {
-        aligned_dst = (rt_int32_t *)dst_ptr;
-        aligned_src = (rt_int32_t *)src_ptr;
+        aligned_dst = (long *)dst_ptr;
+        aligned_src = (long *)src_ptr;
 
         /* Copy 4X long words at a time if possible. */
         while (len >= BIGBLOCKSIZE)
@@ -461,6 +461,7 @@ rt_int32_t rt_strcmp(const char *cs, const char *ct)
     return (*cs - *ct);
 }
 RTM_EXPORT(rt_strcmp);
+
 /**
  * The  strnlen()  function  returns the number of characters in the
  * string pointed to by s, excluding the terminating null byte ('\0'),
@@ -476,11 +477,13 @@ rt_size_t rt_strnlen(const char *s, rt_ubase_t maxlen)
 {
     const char *sc;
 
-    for (sc = s; *sc != '\0' && sc - s < maxlen; ++sc) /* nothing */
+    for (sc = s; *sc != '\0' && (rt_ubase_t)(sc - s) < maxlen; ++sc) /* nothing */
         ;
 
     return sc - s;
 }
+RTM_EXPORT(rt_strnlen);
+
 /**
  * This function will return the length of a string, which terminate will
  * null character.
@@ -535,31 +538,52 @@ void rt_show_version(void)
     rt_kprintf("- RT -     Thread Operating System\n");
     rt_kprintf(" / | \\     %d.%d.%d build %s\n",
                RT_VERSION, RT_SUBVERSION, RT_REVISION, __DATE__);
-    rt_kprintf(" 2006 - 2018 Copyright by rt-thread team\n");
+    rt_kprintf(" 2006 - 2019 Copyright by rt-thread team\n");
 }
 RTM_EXPORT(rt_show_version);
 
 /* private function */
 #define isdigit(c)  ((unsigned)((c) - '0') < 10)
 
-rt_inline rt_int32_t divide(rt_int32_t *n, rt_int32_t base)
+#ifdef RT_PRINTF_LONGLONG
+rt_inline int divide(long long *n, int base)
 {
-    rt_int32_t res;
+    int res;
 
     /* optimized for processor which does not support divide instructions. */
     if (base == 10)
     {
-        res = ((rt_uint32_t) * n) % 10U;
-        *n = ((rt_uint32_t) * n) / 10U;
+        res = (int)(((unsigned long long)*n) % 10U);
+        *n = (long long)(((unsigned long long)*n) / 10U);
     }
     else
     {
-        res = ((rt_uint32_t) * n) % 16U;
-        *n = ((rt_uint32_t) * n) / 16U;
+        res = (int)(((unsigned long long)*n) % 16U);
+        *n = (long long)(((unsigned long long)*n) / 16U);
     }
 
     return res;
 }
+#else
+rt_inline int divide(long *n, int base)
+{
+    int res;
+
+    /* optimized for processor which does not support divide instructions. */
+    if (base == 10)
+    {
+        res = (int)(((unsigned long)*n) % 10U);
+        *n = (long)(((unsigned long)*n) / 10U);
+    }
+    else
+    {
+        res = (int)(((unsigned long)*n) % 16U);
+        *n = (long)(((unsigned long)*n) / 16U);
+    }
+
+    return res;
+}
+#endif
 
 rt_inline int skip_atoi(const char **s)
 {
@@ -581,7 +605,11 @@ rt_inline int skip_atoi(const char **s)
 #ifdef RT_PRINTF_PRECISION
 static char *print_number(char *buf,
                           char *end,
+#ifdef RT_PRINTF_LONGLONG
+                          long long  num,
+#else
                           long  num,
+#endif
                           int   base,
                           int   s,
                           int   precision,
@@ -589,7 +617,11 @@ static char *print_number(char *buf,
 #else
 static char *print_number(char *buf,
                           char *end,
+#ifdef RT_PRINTF_LONGLONG
+                          long long  num,
+#else
                           long  num,
+#endif
                           int   base,
                           int   s,
                           int   type)
@@ -601,6 +633,7 @@ static char *print_number(char *buf,
 #else
     char tmp[16];
 #endif
+    int precision_bak = precision;
     const char *digits;
     static const char small_digits[] = "0123456789abcdef";
     static const char large_digits[] = "0123456789ABCDEF";
@@ -664,7 +697,7 @@ static char *print_number(char *buf,
 
         while (size-- > 0)
         {
-            if (buf <= end)
+            if (buf < end)
                 *buf = ' ';
             ++ buf;
         }
@@ -672,11 +705,11 @@ static char *print_number(char *buf,
 
     if (sign)
     {
-        if (buf <= end)
+        if (buf < end)
         {
             *buf = sign;
-            -- size;
         }
+        -- size;
         ++ buf;
     }
 
@@ -685,16 +718,16 @@ static char *print_number(char *buf,
     {
         if (base == 8)
         {
-            if (buf <= end)
+            if (buf < end)
                 *buf = '0';
             ++ buf;
         }
         else if (base == 16)
         {
-            if (buf <= end)
+            if (buf < end)
                 *buf = '0';
             ++ buf;
-            if (buf <= end)
+            if (buf < end)
             {
                 *buf = type & LARGE ? 'X' : 'x';
             }
@@ -708,7 +741,7 @@ static char *print_number(char *buf,
     {
         while (size-- > 0)
         {
-            if (buf <= end)
+            if (buf < end)
                 *buf = c;
             ++ buf;
         }
@@ -717,23 +750,23 @@ static char *print_number(char *buf,
 #ifdef RT_PRINTF_PRECISION
     while (i < precision--)
     {
-        if (buf <= end)
+        if (buf < end)
             *buf = '0';
         ++ buf;
     }
 #endif
 
     /* put number in the temporary buffer */
-    while (i-- > 0)
+    while (i-- > 0 && (precision_bak != 0))
     {
-        if (buf <= end)
+        if (buf < end)
             *buf = tmp[i];
         ++ buf;
     }
 
     while (size-- > 0)
     {
-        if (buf <= end)
+        if (buf < end)
             *buf = ' ';
         ++ buf;
     }
@@ -765,7 +798,7 @@ rt_int32_t rt_vsnprintf(char       *buf,
 #endif
 
     str = buf;
-    end = buf + size - 1;
+    end = buf + size;
 
     /* Make sure end is always >= buf */
     if (end < buf)
@@ -778,7 +811,7 @@ rt_int32_t rt_vsnprintf(char       *buf,
     {
         if (*fmt != '%')
         {
-            if (str <= end)
+            if (str < end)
                 *str = *fmt;
             ++ str;
             continue;
@@ -859,20 +892,20 @@ rt_int32_t rt_vsnprintf(char       *buf,
             {
                 while (--field_width > 0)
                 {
-                    if (str <= end) *str = ' ';
+                    if (str < end) *str = ' ';
                     ++ str;
                 }
             }
 
             /* get character */
             c = (rt_uint8_t)va_arg(args, int);
-            if (str <= end) *str = c;
+            if (str < end) *str = c;
             ++ str;
 
             /* put width */
             while (--field_width > 0)
             {
-                if (str <= end) *str = ' ';
+                if (str < end) *str = ' ';
                 ++ str;
             }
             continue;
@@ -890,21 +923,21 @@ rt_int32_t rt_vsnprintf(char       *buf,
             {
                 while (len < field_width--)
                 {
-                    if (str <= end) *str = ' ';
+                    if (str < end) *str = ' ';
                     ++ str;
                 }
             }
 
             for (i = 0; i < len; ++i)
             {
-                if (str <= end) *str = *s;
+                if (str < end) *str = *s;
                 ++ str;
                 ++ s;
             }
 
             while (len < field_width--)
             {
-                if (str <= end) *str = ' ';
+                if (str < end) *str = ' ';
                 ++ str;
             }
             continue;
@@ -927,7 +960,7 @@ rt_int32_t rt_vsnprintf(char       *buf,
             continue;
 
         case '%':
-            if (str <= end) *str = '%';
+            if (str < end) *str = '%';
             ++ str;
             continue;
 
@@ -949,12 +982,12 @@ rt_int32_t rt_vsnprintf(char       *buf,
             break;
 
         default:
-            if (str <= end) *str = '%';
+            if (str < end) *str = '%';
             ++ str;
 
             if (*fmt)
             {
-                if (str <= end) *str = *fmt;
+                if (str < end) *str = *fmt;
                 ++ str;
             }
             else
@@ -991,8 +1024,14 @@ rt_int32_t rt_vsnprintf(char       *buf,
 #endif
     }
 
-    if (str <= end) *str = '\0';
-    else *end = '\0';
+    if (size > 0)
+    {
+        if (str < end) *str = '\0';
+        else
+        {
+            end[-1] = '\0';
+        }
+    }
 
     /* the trailing null byte doesn't count towards the total
     * ++str;
