@@ -45,8 +45,9 @@ static uint32_t _SysTick_Config(rt_uint32_t ticks)
 }
 
 #if defined(RT_USING_USER_MAIN) && defined(RT_USING_HEAP)
-#define RT_HEAP_SIZE 1024
-static uint32_t rt_heap[RT_HEAP_SIZE];     // heap default size: 4K(1024 * 4)
+
+#ifdef RT_USING_HEAP_ARRAY
+static uint32_t rt_heap[RT_HEAP_SIZE];     // heap default size: 4 KByte(RT_HEAP_SIZE * 4)
 RT_WEAK void *rt_heap_begin_get(void)
 {
     return rt_heap;
@@ -56,6 +57,28 @@ RT_WEAK void *rt_heap_end_get(void)
 {
     return rt_heap + RT_HEAP_SIZE;
 }
+#else
+#define STM32_SRAM1_START               (0x20000000)
+#define STM32_SRAM1_END                 (STM32_SRAM1_START + STM32_SRAM1_SIZE * 1024)
+
+#if defined(__CC_ARM) || defined(__CLANG_ARM)
+extern int Image$$RW_IRAM1$$ZI$$Limit;
+#define HEAP_BEGIN                      ((void *)&Image$$RW_IRAM1$$ZI$$Limit)
+#endif
+
+#define HEAP_END                        STM32_SRAM1_END
+
+RT_WEAK void *rt_heap_begin_get(void)
+{
+    return HEAP_BEGIN;
+}
+
+RT_WEAK void *rt_heap_end_get(void)
+{
+    return (void *)HEAP_END;
+}
+#endif
+
 #endif
 
 /**

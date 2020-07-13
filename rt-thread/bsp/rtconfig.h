@@ -107,6 +107,14 @@
 // <c1>Dynamic Heap Management
 //  <i>Dynamic Heap Management
 //#define RT_USING_HEAP
+#ifdef RT_USING_HEAP
+#define RT_USING_HEAP_ARRAY
+#ifdef RT_USING_HEAP_ARRAY
+#define RT_HEAP_SIZE          1024
+#else
+#define STM32_SRAM1_SIZE      64
+#endif
+#endif
 // </c>
 // <c1>using small memory
 //  <i>using small memory
