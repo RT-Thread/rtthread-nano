@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -8,6 +8,7 @@
  * 2006-02-24     Bernard      first version
  * 2006-05-03     Bernard      add IRQ_DEBUG
  * 2016-08-09     ArdaFu       add interrupt enter and leave hook.
+ * 2018-11-22     Jesven       rt_interrupt_get_nest function add disable irq
  */
 
 #include <rthw.h>
@@ -20,7 +21,7 @@ static void (*rt_interrupt_leave_hook)(void);
 
 /**
  * @ingroup Hook
- * This function set a hook function when the system enter a interrupt 
+ * This function set a hook function when the system enter a interrupt
  *
  * @note the hook function must be simple and never be blocked or suspend.
  */
@@ -30,7 +31,7 @@ void rt_interrupt_enter_sethook(void (*hook)(void))
 }
 /**
  * @ingroup Hook
- * This function set a hook function when the system exit a interrupt. 
+ * This function set a hook function when the system exit a interrupt.
  *
  * @note the hook function must be simple and never be blocked or suspend.
  */
@@ -69,7 +70,6 @@ void rt_interrupt_enter(void)
     RT_OBJECT_HOOK_CALL(rt_interrupt_enter_hook,());
     rt_hw_interrupt_enable(level);
 }
-RTM_EXPORT(rt_interrupt_enter);
 
 /**
  * This function will be invoked by BSP, when leave interrupt service routine
@@ -90,7 +90,6 @@ void rt_interrupt_leave(void)
     RT_OBJECT_HOOK_CALL(rt_interrupt_leave_hook,());
     rt_hw_interrupt_enable(level);
 }
-RTM_EXPORT(rt_interrupt_leave);
 
 /**
  * This function will return the nest of interrupt.
@@ -100,14 +99,15 @@ RTM_EXPORT(rt_interrupt_leave);
  *
  * @return the number of nested interrupts.
  */
-rt_uint8_t rt_interrupt_get_nest(void)
+RT_WEAK rt_uint8_t rt_interrupt_get_nest(void)
 {
-    return rt_interrupt_nest;
-}
-RTM_EXPORT(rt_interrupt_get_nest);
+    rt_uint8_t ret;
+    rt_base_t level;
 
-RTM_EXPORT(rt_hw_interrupt_disable);
-RTM_EXPORT(rt_hw_interrupt_enable);
+    level = rt_hw_interrupt_disable();
+    ret = rt_interrupt_nest;
+    rt_hw_interrupt_enable(level);
+    return ret;
+}
 
 /**@}*/
-

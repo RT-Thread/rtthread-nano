@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -59,6 +59,9 @@ rt_uint8_t *rt_hw_stack_init(void *tentry, void *parameter,
 #ifdef RT_USING_LWP
     *(--stk) = 0;       /* user lr */
     *(--stk) = 0;       /* user sp*/
+#endif
+#ifdef RT_USING_FPU
+    *(--stk) = 0;       /* not use fpu*/
 #endif
 
     /* return task's current stack address */

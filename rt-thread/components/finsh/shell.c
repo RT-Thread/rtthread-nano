@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,6 +19,7 @@
  */
 
 #include <rthw.h>
+#include <finsh_config.h>
 
 #ifdef RT_USING_FINSH
 
@@ -173,15 +174,21 @@ static int finsh_getchar(void)
     char ch = 0;
 
     RT_ASSERT(shell != RT_NULL);
-    while (rt_device_read(shell->device, -1, &ch, 1) != 1)
-        rt_sem_take(&shell->rx_sem, RT_WAITING_FOREVER);
 
-    return (int)ch;
+    if(shell->device)
+    {
+        while (rt_device_read(shell->device, -1, &ch, 1) != 1)
+            rt_sem_take(&shell->rx_sem, RT_WAITING_FOREVER);
+
+        return (int)ch;
+    }
+    else
 #endif
-#else
-    extern char rt_hw_console_getchar(void);
-    return rt_hw_console_getchar();
 #endif
+    {
+        extern char rt_hw_console_getchar(void);
+        return rt_hw_console_getchar();
+    }
 }
 
 #if !defined(RT_USING_POSIX) && defined(RT_USING_DEVICE)
@@ -844,7 +851,7 @@ int finsh_system_init(void)
     finsh_system_var_init(&__vsymtab_start, &__vsymtab_end);
 #elif defined(_MSC_VER)
     unsigned int *ptr_begin, *ptr_end;
-		
+
     if(shell)
     {
         rt_kprintf("finsh shell already init.\n");

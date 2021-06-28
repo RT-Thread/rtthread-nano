@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -10,6 +10,7 @@
  * 2017-07-19     Aubr.Cool    limit argc to RT_FINSH_ARG_MAX
  */
 #include <rtthread.h>
+#include <finsh_config.h>
 
 #ifdef FINSH_USING_MSH
 
@@ -297,7 +298,7 @@ int system(const char *command)
 
     return ret;
 }
-RTM_EXPORT(system);
+
 #endif
 
 static int _msh_exec_cmd(char *cmd, rt_size_t length, int *retp)
@@ -374,7 +375,7 @@ int msh_exec(char *cmd, rt_size_t length)
     int cmd_ret;
 
     /* strim the beginning of command */
-    while (*cmd  == ' ' || *cmd == '\t')
+    while ((length > 0) && (*cmd == ' ' || *cmd == '\t'))
     {
         cmd++;
         length--;

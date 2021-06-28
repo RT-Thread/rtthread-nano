@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Change Logs:
  * Date           Author       Notes
- * 2019-03-29 	  quanzhao 	   the first version
+ * 2019-03-29     quanzhao     the first version
  */
 #include <rthw.h>
 #include <rtdef.h>
@@ -30,6 +30,7 @@ void rt_hw_cpu_icache_invalidate(void *addr, int size)
     rt_uint32_t start_addr = (rt_uint32_t)addr;
     rt_uint32_t end_addr = (rt_uint32_t) addr + size + line_size - 1;
 
+    asm volatile ("dmb":::"memory");
     start_addr &= ~(line_size-1);
     end_addr &= ~(line_size-1);
     while (start_addr < end_addr)
@@ -37,6 +38,7 @@ void rt_hw_cpu_icache_invalidate(void *addr, int size)
         asm volatile ("mcr p15, 0, %0, c7, c5, 1" :: "r"(start_addr));  /* icimvau */
         start_addr += line_size;
     }
+    asm volatile ("dsb\n\tisb":::"memory");
 }
 
 void rt_hw_cpu_dcache_invalidate(void *addr, int size)
@@ -45,6 +47,7 @@ void rt_hw_cpu_dcache_invalidate(void *addr, int size)
     rt_uint32_t start_addr = (rt_uint32_t)addr;
     rt_uint32_t end_addr = (rt_uint32_t) addr + size + line_size - 1;
 
+    asm volatile ("dmb":::"memory");
     start_addr &= ~(line_size-1);
     end_addr &= ~(line_size-1);
     while (start_addr < end_addr)
@@ -52,6 +55,7 @@ void rt_hw_cpu_dcache_invalidate(void *addr, int size)
         asm volatile ("mcr p15, 0, %0, c7, c6, 1" :: "r"(start_addr));  /* dcimvac */
         start_addr += line_size;
     }
+    asm volatile ("dsb":::"memory");
 }
 
 void rt_hw_cpu_dcache_clean(void *addr, int size)
@@ -60,6 +64,7 @@ void rt_hw_cpu_dcache_clean(void *addr, int size)
     rt_uint32_t start_addr = (rt_uint32_t)addr;
     rt_uint32_t end_addr = (rt_uint32_t) addr + size + line_size - 1;
 
+    asm volatile ("dmb":::"memory");
     start_addr &= ~(line_size-1);
     end_addr &= ~(line_size-1);
     while (start_addr < end_addr)
@@ -67,6 +72,7 @@ void rt_hw_cpu_dcache_clean(void *addr, int size)
         asm volatile ("mcr p15, 0, %0, c7, c10, 1" :: "r"(start_addr)); /* dccmvac */
         start_addr += line_size;
     }
+    asm volatile ("dsb":::"memory");
 }
 
 void rt_hw_cpu_icache_ops(int ops, void *addr, int size)

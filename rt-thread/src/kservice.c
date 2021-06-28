@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -21,10 +21,6 @@
 
 #include <rtthread.h>
 #include <rthw.h>
-
-#ifdef RT_USING_MODULE
-#include <dlmodule.h>
-#endif
 
 /* use precision */
 #define RT_PRINTF_PRECISION
@@ -63,7 +59,6 @@ rt_err_t rt_get_errno(void)
 
     return tid->error;
 }
-RTM_EXPORT(rt_get_errno);
 
 /*
  * This function will set errno
@@ -92,7 +87,6 @@ void rt_set_errno(rt_err_t error)
 
     tid->error = error;
 }
-RTM_EXPORT(rt_set_errno);
 
 /**
  * This function returns errno.
@@ -112,7 +106,6 @@ int *_rt_errno(void)
 
     return (int *)&__rt_errno;
 }
-RTM_EXPORT(_rt_errno);
 
 /**
  * This function will set the content of memory to specified value
@@ -195,7 +188,6 @@ void *rt_memset(void *s, int c, rt_ubase_t count)
 #undef TOO_SMALL
 #endif
 }
-RTM_EXPORT(rt_memset);
 
 /**
  * This function will copy memory content from source address to destination
@@ -278,7 +270,6 @@ void *rt_memcpy(void *dst, const void *src, rt_ubase_t count)
 #undef TOO_SMALL
 #endif
 }
-RTM_EXPORT(rt_memcpy);
 
 /**
  * This function will move memory content from source address to destination
@@ -310,13 +301,12 @@ void *rt_memmove(void *dest, const void *src, rt_ubase_t n)
 
     return dest;
 }
-RTM_EXPORT(rt_memmove);
 
 /**
  * This function will compare two areas of memory
  *
  * @param cs one area of memory
- * @param ct znother area of memory
+ * @param ct another area of memory
  * @param count the size of the area
  *
  * @return the result
@@ -326,13 +316,12 @@ rt_int32_t rt_memcmp(const void *cs, const void *ct, rt_ubase_t count)
     const unsigned char *su1, *su2;
     int res = 0;
 
-    for (su1 = cs, su2 = ct; 0 < count; ++su1, ++su2, count--)
+    for (su1 = (const unsigned char *)cs, su2 = (const unsigned char *)ct; 0 < count; ++su1, ++su2, count--)
         if ((res = *su1 - *su2) != 0)
             break;
 
     return res;
 }
-RTM_EXPORT(rt_memcmp);
 
 /**
  * This function will return the first occurrence of a string.
@@ -360,7 +349,6 @@ char *rt_strstr(const char *s1, const char *s2)
 
     return RT_NULL;
 }
-RTM_EXPORT(rt_strstr);
 
 /**
  * This function will compare two strings while ignoring differences in case
@@ -370,7 +358,7 @@ RTM_EXPORT(rt_strstr);
  *
  * @return the result
  */
-rt_uint32_t rt_strcasecmp(const char *a, const char *b)
+rt_int32_t rt_strcasecmp(const char *a, const char *b)
 {
     int ca, cb;
 
@@ -387,7 +375,6 @@ rt_uint32_t rt_strcasecmp(const char *a, const char *b)
 
     return ca - cb;
 }
-RTM_EXPORT(rt_strcasecmp);
 
 /**
  * This function will copy string no more than n bytes.
@@ -419,7 +406,6 @@ char *rt_strncpy(char *dst, const char *src, rt_ubase_t n)
 
     return (dst);
 }
-RTM_EXPORT(rt_strncpy);
 
 /**
  * This function will compare two strings with specified maximum length
@@ -443,7 +429,6 @@ rt_int32_t rt_strncmp(const char *cs, const char *ct, rt_ubase_t count)
 
     return __res;
 }
-RTM_EXPORT(rt_strncmp);
 
 /**
  * This function will compare two strings without specified length
@@ -456,11 +441,13 @@ RTM_EXPORT(rt_strncmp);
 rt_int32_t rt_strcmp(const char *cs, const char *ct)
 {
     while (*cs && *cs == *ct)
-        cs++, ct++;
+    {
+        cs++;
+        ct++;
+    }
 
     return (*cs - *ct);
 }
-RTM_EXPORT(rt_strcmp);
 
 /**
  * The  strnlen()  function  returns the number of characters in the
@@ -482,7 +469,6 @@ rt_size_t rt_strnlen(const char *s, rt_ubase_t maxlen)
 
     return sc - s;
 }
-RTM_EXPORT(rt_strnlen);
 
 /**
  * This function will return the length of a string, which terminate will
@@ -501,7 +487,6 @@ rt_size_t rt_strlen(const char *s)
 
     return sc - s;
 }
-RTM_EXPORT(rt_strlen);
 
 #ifdef RT_USING_HEAP
 /**
@@ -523,7 +508,7 @@ char *rt_strdup(const char *s)
 
     return tmp;
 }
-RTM_EXPORT(rt_strdup);
+
 #if defined(__CC_ARM) || defined(__CLANG_ARM)
 char *strdup(const char *s) __attribute__((alias("rt_strdup")));
 #endif
@@ -538,12 +523,11 @@ void rt_show_version(void)
     rt_kprintf("- RT -     Thread Operating System\n");
     rt_kprintf(" / | \\     %d.%d.%d build %s\n",
                RT_VERSION, RT_SUBVERSION, RT_REVISION, __DATE__);
-    rt_kprintf(" 2006 - 2019 Copyright by rt-thread team\n");
+    rt_kprintf(" 2006 - 2020 Copyright by rt-thread team\n");
 }
-RTM_EXPORT(rt_show_version);
 
 /* private function */
-#define isdigit(c)  ((unsigned)((c) - '0') < 10)
+#define _ISDIGIT(c)  ((unsigned)((c) - '0') < 10)
 
 #ifdef RT_PRINTF_LONGLONG
 rt_inline int divide(long long *n, int base)
@@ -588,7 +572,7 @@ rt_inline int divide(long *n, int base)
 rt_inline int skip_atoi(const char **s)
 {
     register int i = 0;
-    while (isdigit(**s))
+    while (_ISDIGIT(**s))
         i = i * 10 + *((*s)++) - '0';
 
     return i;
@@ -834,7 +818,7 @@ rt_int32_t rt_vsnprintf(char       *buf,
 
         /* get field width */
         field_width = -1;
-        if (isdigit(*fmt)) field_width = skip_atoi(&fmt);
+        if (_ISDIGIT(*fmt)) field_width = skip_atoi(&fmt);
         else if (*fmt == '*')
         {
             ++ fmt;
@@ -853,7 +837,7 @@ rt_int32_t rt_vsnprintf(char       *buf,
         if (*fmt == '.')
         {
             ++ fmt;
-            if (isdigit(*fmt)) precision = skip_atoi(&fmt);
+            if (_ISDIGIT(*fmt)) precision = skip_atoi(&fmt);
             else if (*fmt == '*')
             {
                 ++ fmt;
@@ -914,7 +898,7 @@ rt_int32_t rt_vsnprintf(char       *buf,
             s = va_arg(args, char *);
             if (!s) s = "(NULL)";
 
-            len = rt_strlen(s);
+            for (len = 0; (len != field_width) && (s[len] != '\0'); len++);
 #ifdef RT_PRINTF_PRECISION
             if (precision > 0 && len > precision) len = precision;
 #endif
@@ -1038,7 +1022,6 @@ rt_int32_t rt_vsnprintf(char       *buf,
     */
     return str - buf;
 }
-RTM_EXPORT(rt_vsnprintf);
 
 /**
  * This function will fill a formatted string to buffer
@@ -1058,7 +1041,6 @@ rt_int32_t rt_snprintf(char *buf, rt_size_t size, const char *fmt, ...)
 
     return n;
 }
-RTM_EXPORT(rt_snprintf);
 
 /**
  * This function will fill a formatted string to buffer
@@ -1071,7 +1053,6 @@ rt_int32_t rt_vsprintf(char *buf, const char *format, va_list arg_ptr)
 {
     return rt_vsnprintf(buf, (rt_size_t) - 1, format, arg_ptr);
 }
-RTM_EXPORT(rt_vsprintf);
 
 /**
  * This function will fill a formatted string to buffer
@@ -1090,7 +1071,6 @@ rt_int32_t rt_sprintf(char *buf, const char *format, ...)
 
     return n;
 }
-RTM_EXPORT(rt_sprintf);
 
 #ifdef RT_USING_CONSOLE
 
@@ -1104,7 +1084,6 @@ rt_device_t rt_console_get_device(void)
 {
     return _console_device;
 }
-RTM_EXPORT(rt_console_get_device);
 
 /**
  * This function will set a device as console device.
@@ -1113,18 +1092,22 @@ RTM_EXPORT(rt_console_get_device);
  *
  * @param name the name of new console device
  *
- * @return the old console device handler
+ * @return the old console device handler on successful, or RT_NULL on failure.
  */
 rt_device_t rt_console_set_device(const char *name)
 {
-    rt_device_t new, old;
+    rt_device_t new_device, old_device;
 
     /* save old device */
-    old = _console_device;
+    old_device = _console_device;
 
     /* find new console device */
-    new = rt_device_find(name);
-    if (new != RT_NULL)
+    new_device = rt_device_find(name);
+
+    /* check whether it's a same device */
+    if (new_device == old_device) return RT_NULL;
+
+    if (new_device != RT_NULL)
     {
         if (_console_device != RT_NULL)
         {
@@ -1133,20 +1116,18 @@ rt_device_t rt_console_set_device(const char *name)
         }
 
         /* set new console device */
-        rt_device_open(new, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_STREAM);
-        _console_device = new;
+        rt_device_open(new_device, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_STREAM);
+        _console_device = new_device;
     }
 
-    return old;
+    return old_device;
 }
-RTM_EXPORT(rt_console_set_device);
 #endif
 
 RT_WEAK void rt_hw_console_output(const char *str)
 {
     /* empty console output */
 }
-RTM_EXPORT(rt_hw_console_output);
 
 /**
  * This function will put string to the console.
@@ -1213,7 +1194,6 @@ void rt_kprintf(const char *fmt, ...)
 #endif
     va_end(args);
 }
-RTM_EXPORT(rt_kprintf);
 #endif
 
 #ifdef RT_USING_HEAP
@@ -1228,38 +1208,42 @@ RTM_EXPORT(rt_kprintf);
  */
 void *rt_malloc_align(rt_size_t size, rt_size_t align)
 {
-    void *align_ptr;
     void *ptr;
+    void *align_ptr;
+    int uintptr_size;
     rt_size_t align_size;
 
-    /* align the alignment size to 4 byte */
-    align = ((align + 0x03) & ~0x03);
+    /* sizeof pointer */
+    uintptr_size = sizeof(void*);
+    uintptr_size -= 1;
+
+    /* align the alignment size to uintptr size byte */
+    align = ((align + uintptr_size) & ~uintptr_size);
 
     /* get total aligned size */
-    align_size = ((size + 0x03) & ~0x03) + align;
+    align_size = ((size + uintptr_size) & ~uintptr_size) + align;
     /* allocate memory block from heap */
     ptr = rt_malloc(align_size);
     if (ptr != RT_NULL)
     {
         /* the allocated memory block is aligned */
-        if (((rt_uint32_t)ptr & (align - 1)) == 0)
+        if (((rt_ubase_t)ptr & (align - 1)) == 0)
         {
-            align_ptr = (void *)((rt_uint32_t)ptr + align);
+            align_ptr = (void *)((rt_ubase_t)ptr + align);
         }
         else
         {
-            align_ptr = (void *)(((rt_uint32_t)ptr + (align - 1)) & ~(align - 1));
+            align_ptr = (void *)(((rt_ubase_t)ptr + (align - 1)) & ~(align - 1));
         }
 
         /* set the pointer before alignment pointer to the real pointer */
-        *((rt_uint32_t *)((rt_uint32_t)align_ptr - sizeof(void *))) = (rt_uint32_t)ptr;
+        *((rt_ubase_t *)((rt_ubase_t)align_ptr - sizeof(void *))) = (rt_ubase_t)ptr;
 
         ptr = align_ptr;
     }
 
     return ptr;
 }
-RTM_EXPORT(rt_malloc_align);
 
 /**
  * This function release the memory block, which is allocated by
@@ -1271,10 +1255,9 @@ void rt_free_align(void *ptr)
 {
     void *real_ptr;
 
-    real_ptr = (void *) * (rt_uint32_t *)((rt_uint32_t)ptr - sizeof(void *));
+    real_ptr = (void *) * (rt_ubase_t *)((rt_ubase_t)ptr - sizeof(void *));
     rt_free(real_ptr);
 }
-RTM_EXPORT(rt_free_align);
 #endif
 
 #ifndef RT_USING_CPU_FFS
@@ -1327,7 +1310,9 @@ int __rt_ffs(int value)
 
 #ifdef RT_DEBUG
 /* RT_ASSERT(EX)'s hook */
+
 void (*rt_assert_hook)(const char *ex, const char *func, rt_size_t line);
+
 /**
  * This function will set a hook function to RT_ASSERT(EX). It will run when the expression is false.
  *
@@ -1351,47 +1336,14 @@ void rt_assert_handler(const char *ex_string, const char *func, rt_size_t line)
 
     if (rt_assert_hook == RT_NULL)
     {
-#ifdef RT_USING_MODULE
-        if (dlmodule_self())
-        {
-            /* close assertion module */
-            dlmodule_exit(-1);
-        }
-        else
-#endif
-        {
-            rt_kprintf("(%s) assertion failed at function:%s, line number:%d \n", ex_string, func, line);
-            while (dummy == 0);
-        }
+        rt_kprintf("(%s) assertion failed at function:%s, line number:%d \n", ex_string, func, line);
+        while (dummy == 0);
     }
     else
     {
         rt_assert_hook(ex_string, func, line);
     }
 }
-RTM_EXPORT(rt_assert_handler);
 #endif /* RT_DEBUG */
-
-#if !defined (RT_USING_NEWLIB) && defined (RT_USING_MINILIBC) && defined (__GNUC__)
-#include <sys/types.h>
-void *memcpy(void *dest, const void *src, size_t n) __attribute__((weak, alias("rt_memcpy")));
-void *memset(void *s, int c, size_t n) __attribute__((weak, alias("rt_memset")));
-void *memmove(void *dest, const void *src, size_t n) __attribute__((weak, alias("rt_memmove")));
-int   memcmp(const void *s1, const void *s2, size_t n) __attribute__((weak, alias("rt_memcmp")));
-
-size_t strlen(const char *s) __attribute__((weak, alias("rt_strlen")));
-char *strstr(const char *s1, const char *s2) __attribute__((weak, alias("rt_strstr")));
-int strcasecmp(const char *a, const char *b) __attribute__((weak, alias("rt_strcasecmp")));
-char *strncpy(char *dest, const char *src, size_t n) __attribute__((weak, alias("rt_strncpy")));
-int strncmp(const char *cs, const char *ct, size_t count) __attribute__((weak, alias("rt_strncmp")));
-#ifdef RT_USING_HEAP
-char *strdup(const char *s) __attribute__((weak, alias("rt_strdup")));
-#endif
-
-int sprintf(char *buf, const char *format, ...) __attribute__((weak, alias("rt_sprintf")));
-int snprintf(char *buf, rt_size_t size, const char *fmt, ...) __attribute__((weak, alias("rt_snprintf")));
-int vsprintf(char *buf, const char *format, va_list arg_ptr) __attribute__((weak, alias("rt_vsprintf")));
-
-#endif
 
 /**@}*/

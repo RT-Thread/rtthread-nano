@@ -18,10 +18,12 @@ static void MX_GPIO_Init(void);
 
 int main(void)
 {
+    int cnt = 0;
     MX_GPIO_Init();
 
     while (1)
     {
+        cnt++;
         HAL_GPIO_WritePin(LD2_GPIO_PORT, LD2_PIN, GPIO_PIN_SET);
         rt_thread_mdelay(500);
         HAL_GPIO_WritePin(LD2_GPIO_PORT, LD2_PIN, GPIO_PIN_RESET);
@@ -42,3 +44,6 @@ static void MX_GPIO_Init(void)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(LD2_GPIO_PORT, &GPIO_InitStruct);
 }
+
+
+

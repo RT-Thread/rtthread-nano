@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -35,7 +35,7 @@ extern "C" {
 #endif
 
 #ifndef RT_CPU_CACHE_LINE_SZ
-#define RT_CPU_CACHE_LINE_SZ	32
+#define RT_CPU_CACHE_LINE_SZ    32
 #endif
 
 enum RT_HW_CACHE_OPS
@@ -98,14 +98,14 @@ void rt_hw_interrupt_enable(rt_base_t level);
 /*
  * Context interfaces
  */
-void rt_hw_context_switch(rt_uint32_t from, rt_uint32_t to);
-void rt_hw_context_switch_to(rt_uint32_t to);
-void rt_hw_context_switch_interrupt(rt_uint32_t from, rt_uint32_t to);
+void rt_hw_context_switch(rt_ubase_t from, rt_ubase_t to);
+void rt_hw_context_switch_to(rt_ubase_t to);
+void rt_hw_context_switch_interrupt(rt_ubase_t from, rt_ubase_t to);
 
 void rt_hw_console_output(const char *str);
 
-void rt_hw_backtrace(rt_uint32_t *fp, rt_uint32_t thread_entry);
-void rt_hw_show_memory(rt_uint32_t addr, rt_uint32_t size);
+void rt_hw_backtrace(rt_uint32_t *fp, rt_ubase_t thread_entry);
+void rt_hw_show_memory(rt_uint32_t addr, rt_size_t size);
 
 /*
  * Exception interfaces
@@ -117,7 +117,7 @@ void rt_hw_exception_install(rt_err_t (*exception_handle)(void *context));
  */
 void rt_hw_us_delay(rt_uint32_t us);
 
-#define RT_DEFINE_SPINLOCK(x)  
+#define RT_DEFINE_SPINLOCK(x)
 #define RT_DECLARE_SPINLOCK(x)    rt_ubase_t x
 
 #define rt_hw_spin_lock(lock)     *(lock) = rt_hw_interrupt_disable()
