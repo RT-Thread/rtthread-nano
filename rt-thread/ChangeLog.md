@@ -1,3 +1,56 @@
+# RT-Thread v3.1.5 Change Log
+
+Change log since v3.1.3
+
+## Kernel
+
+- Fix the issue when block = NULL in rt_mp_free;
+- Fix the software issue when the system timer thread is pending
+- Fix the timer/software timer handling issue if the timeout function starts/stops/deletes this timer.
+- Fix an issue with rt_timer_start being broken and destroying the timer list
+- Fix bug of rt_memheap_detach
+- Fix the bug that the linked list is still mounted when the single timer is not modified
+- Fix the delay_until issue
+- Add mb mq value overflow-check code
+- Fix the rt_event_recv function, if the event met without blocking, assigning thread->event_set/event_info will goes well
+- Add the definition of the maximum value of ipc type
+- Fix the delay_until issue
+- fixed __rt_ffs bug on account of armclang LTO.
+- fixed rt_timer_list_next_timeout multi-task safe
+- fix the software issue when the system timer thread pending.
+- Fix the timer/software timer handling issue if the timeout function starts/stops/deletes this timer.
+- The cleanup operation is executed before the current thread exits
+- Modify cleanup to resolve the issue of unable to free memory and communication between threads
+- Fix double release for thread
+- Fix thread control bug about `RT_THREAD_CTRL_CLOSE` command
+- Fix the issue of critical protection when `rt_thread_delete` change the status of thread;
+- Fix bug in rt_realloc of mem.c, which may cause memory leak
+- Use object_find to implement thread_find/device_find
+- fix the timer code depends on c99
+- Split the component automatic initialization to component automatic initialization and main funciton;
+- Fix RT_IDLE_HOOK spelling issue;
+- Add thread waiting for message queue when queue is full;
+- Fix the issue of delete mq in `rt_mq_create` in some abnormal case;
+- Remove the C++ keywords in the`rt_console_set_device`function;
+- Remove the `suspend_thread_count` member from memory_pool structure;
+- Fix the issue when block = NULL in rt_mp_free;
+- Fix the issue of critical protection when `rt_thread_delete` change the status of thread;
+- update code style and license
+
+## libcpu
+
+- add cortex-m23 
+- add cortex-m33 
+
+## components
+
+- add device.c
+
+## bsp
+
+- add samples for gd32e230k-msh
+- add samples for lpc55s69-blink
+
 # RT-Thread v3.1.3 Change Log
 
 ## Kernel

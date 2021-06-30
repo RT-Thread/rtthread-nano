@@ -37,6 +37,7 @@ static uint32_t _SysTick_Config(rt_uint32_t ticks)
     }
 
     _SYSTICK_LOAD = ticks - 1;
+    NVIC_SetPriority(SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
     _SYSTICK_PRI = 0xFF;
     _SYSTICK_VAL  = 0;
     _SYSTICK_CTRL = 0x07;
@@ -45,8 +46,13 @@ static uint32_t _SysTick_Config(rt_uint32_t ticks)
 }
 
 #if defined(RT_USING_USER_MAIN) && defined(RT_USING_HEAP)
-#define RT_HEAP_SIZE 1024
-static uint32_t rt_heap[RT_HEAP_SIZE];  
+/*
+ * Please modify RT_HEAP_SIZE if you enable RT_USING_HEAP
+ * the RT_HEAP_SIZE max value = (sram size - ZI size), 2048 means 2048 bytes
+ */
+#define RT_HEAP_SIZE (15*1024)
+
+static rt_uint8_t rt_heap[RT_HEAP_SIZE];
 RT_WEAK void *rt_heap_begin_get(void)
 {
     return rt_heap;
@@ -63,9 +69,7 @@ RT_WEAK void *rt_heap_end_get(void)
  */
 void rt_hw_board_init()
 {
-    /* System Clock Update */
-    SystemCoreClockUpdate();
-
+    HAL_Init();
     /* System Tick Configuration */
     _SysTick_Config(SystemCoreClock / RT_TICK_PER_SECOND);
 
@@ -90,6 +94,16 @@ void SysTick_Handler(void)
     rt_interrupt_leave();
 }
 
+
+/*
+ * The following is an example code of FinSH porting based on MCU stm32f103,
+ * please reimplement the corresponding APIs according to the MCU you use.
+ *
+ * This part should be implemented by users:
+ * (1) uart_init()
+ * (2) rt_hw_console_output()
+ * (3) rt_hw_console_getchar()
+ */
 static UART_HandleTypeDef UartHandle;
 static int uart_init(void)
 {
@@ -118,6 +132,7 @@ void rt_hw_console_output(const char *str)
     __HAL_UNLOCK(&UartHandle);
 
     size = rt_strlen(str);
+
     for (i = 0; i < size; i++)
     {
         if (*(str + i) == '\n')

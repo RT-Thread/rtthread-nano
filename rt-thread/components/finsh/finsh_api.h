@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -9,6 +9,8 @@
  */
 #ifndef FINSH_API_H__
 #define FINSH_API_H__
+
+#include "finsh_config.h"
 
 #if defined(_MSC_VER)
 #pragma section("FSymTab$f",read)

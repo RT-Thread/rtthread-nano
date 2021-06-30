@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
+ * Copyright (c) 2006-2021, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -14,6 +14,7 @@
  * 2015-05-04     Bernard      Rename it to components.c because compiling issue
  *                             in some IDEs.
  * 2015-07-29     Arda.Fu      Add support to use RT_USING_USER_MAIN with IAR
+ * 2018-11-22     Jesven       Add secondary cpu boot up
  */
 
 #include <rthw.h>
@@ -91,7 +92,7 @@ void rt_components_board_init(void)
         rt_kprintf(":%d done\n", result);
     }
 #else
-    const init_fn_t *fn_ptr;
+    volatile const init_fn_t *fn_ptr;
 
     for (fn_ptr = &__rt_init_rti_board_start; fn_ptr < &__rt_init_rti_board_end; fn_ptr++)
     {
@@ -117,7 +118,7 @@ void rt_components_init(void)
         rt_kprintf(":%d done\n", result);
     }
 #else
-    const init_fn_t *fn_ptr;
+    volatile const init_fn_t *fn_ptr;
 
     for (fn_ptr = &__rt_init_rti_board_end; fn_ptr < &__rt_init_rti_end; fn_ptr ++)
     {
@@ -125,6 +126,7 @@ void rt_components_init(void)
     }
 #endif
 }
+#endif   /* RT_USING_COMPONENTS_INIT */
 
 #ifdef RT_USING_USER_MAIN
 
@@ -152,7 +154,6 @@ int __low_level_init(void)
     return 0;
 }
 #elif defined(__GNUC__)
-extern int main(void);
 /* Add -eentry to arm-none-eabi-gcc argument */
 int entry(void)
 {
@@ -174,9 +175,10 @@ void main_thread_entry(void *parameter)
     extern int main(void);
     extern int $Super$$main(void);
 
+#ifdef RT_USING_COMPONENTS_INIT
     /* RT-Thread components initialization */
     rt_components_init();
-
+#endif
     /* invoke system main function */
 #if defined(__CC_ARM) || defined(__CLANG_ARM)
     $Super$$main(); /* for ARMCC. */
@@ -200,7 +202,7 @@ void rt_application_init(void)
     result = rt_thread_init(tid, "main", main_thread_entry, RT_NULL,
                             main_stack, sizeof(main_stack), RT_MAIN_THREAD_PRIORITY, 20);
     RT_ASSERT(result == RT_EOK);
-	
+
     /* if not define RT_USING_HEAP, using to eliminate the warning */
     (void)result;
 #endif
@@ -226,11 +228,6 @@ int rtthread_startup(void)
     /* scheduler system initialization */
     rt_system_scheduler_init();
 
-#ifdef RT_USING_SIGNALS
-    /* signal system initialization */
-    rt_system_signal_init();
-#endif
-
     /* create init_thread */
     rt_application_init();
 
@@ -246,5 +243,4 @@ int rtthread_startup(void)
     /* never reach here */
     return 0;
 }
-#endif
 #endif
