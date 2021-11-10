@@ -36,6 +36,13 @@
     else                                                                    \
         asm volatile ("csrrc %0, " #reg ", %1" : "=r"(__tmp) : "r"(bit));   \
             __tmp; })
+
+#define switch_to_interrupt_stack() ({                                              \
+        asm volatile ("csrrw sp,mscratch,sp"); })
+
+#define switch_from_interrupt_stack() ({                                              \
+        asm volatile ("csrrw sp,mscratch,sp"); })
+
 #endif /* end of __GNUC__ */
 
 #endif

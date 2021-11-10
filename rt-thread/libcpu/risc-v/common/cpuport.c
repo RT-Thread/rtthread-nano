@@ -17,6 +17,9 @@
 volatile rt_ubase_t  rt_interrupt_from_thread = 0;
 volatile rt_ubase_t  rt_interrupt_to_thread   = 0;
 volatile rt_uint32_t rt_thread_switch_interrupt_flag = 0;
+#ifdef RT_USING_SW4SWITCH
+int kick_sw4switch(void);
+#endif
 #endif
 
 struct rt_hw_stack_frame
@@ -110,6 +113,9 @@ void rt_hw_context_switch_interrupt(rt_ubase_t from, rt_ubase_t to)
 
     rt_interrupt_to_thread = to;
     rt_thread_switch_interrupt_flag = 1;
+#ifdef RT_USING_SW4SWITCH
+    kick_sw4switch();
+#endif
 
     return ;
 }
