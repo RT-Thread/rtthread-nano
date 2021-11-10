@@ -523,7 +523,7 @@ void rt_show_version(void)
     rt_kprintf("- RT -     Thread Operating System\n");
     rt_kprintf(" / | \\     %d.%d.%d build %s\n",
                RT_VERSION, RT_SUBVERSION, RT_REVISION, __DATE__);
-    rt_kprintf(" 2006 - 2020 Copyright by rt-thread team\n");
+    rt_kprintf(" 2006 - 2021 Copyright by rt-thread team\n");
 }
 
 /* private function */
