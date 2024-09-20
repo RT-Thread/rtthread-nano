@@ -93,8 +93,13 @@
 //  <i>Using Event
 //#define RT_USING_EVENT
 // </c>
+
 // <c1>Using MailBox
 //  <i>Using MailBox
+//#define RT_USING_SIGNALS
+// </c>
+// <c1>Using Signals
+//  <i>Using Signals
 #define RT_USING_MAILBOX
 // </c>
 // <c1>Using Message Queue
