@@ -250,6 +250,7 @@ static void rt_defunct_execute(void)
 
 static void rt_thread_idle_entry(void *parameter)
 {
+    (void)(parameter);
 #ifdef RT_USING_SMP
     if (rt_hw_cpu_id() != 0)
     {

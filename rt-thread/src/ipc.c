@@ -2397,6 +2397,7 @@ rt_err_t rt_mb_control(rt_mailbox_t mb, int cmd, void *arg)
     /* parameter check */
     RT_ASSERT(mb != RT_NULL);
     RT_ASSERT(rt_object_get_type(&mb->parent.parent) == RT_Object_Class_MailBox);
+    (void)(arg);
 
     if (cmd == RT_IPC_CMD_RESET)
     {
