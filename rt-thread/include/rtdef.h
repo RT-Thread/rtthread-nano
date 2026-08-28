@@ -289,7 +289,10 @@ typedef int (*init_fn_t)(void);
 /* environment initialization (mount disk, ...) */
 #define INIT_ENV_EXPORT(fn)             INIT_EXPORT(fn, "5")
 /* application initialization (rtgui application etc ...) */
-#define INIT_APP_EXPORT(fn)             INIT_EXPORT(fn, "6")
+#define _RT_INIT_APP_EXPORT_1(fn)       INIT_EXPORT(fn, "6.999")
+#define _RT_INIT_APP_EXPORT_2(fn, order) INIT_EXPORT(fn, "6." #order)
+#define _RT_INIT_APP_EXPORT_GET(_1, _2, NAME, ...) NAME
+#define INIT_APP_EXPORT(...)            _RT_INIT_APP_EXPORT_GET(__VA_ARGS__, _RT_INIT_APP_EXPORT_2, _RT_INIT_APP_EXPORT_1)(__VA_ARGS__)
 
 #if !defined(RT_USING_FINSH)
 /* define these to empty, even if not include finsh.h file */
